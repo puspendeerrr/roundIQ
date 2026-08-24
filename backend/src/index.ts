@@ -45,19 +45,12 @@ import businessReportsRoutes from './modules/saas/business-reports.routes';
 
 const app = express();
 
-// Security middleware
+// Security middleware & CORS configuration
 app.use(helmet());
 app.use(securityHeaders);
 app.use(
   cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (e.g. mobile apps, curl, postman) or matching FRONTEND_URL
-      if (!origin || origin === env.FRONTEND_URL || env.NODE_ENV === 'development') {
-        callback(null, true);
-      } else {
-        callback(null, true); // Permissive for production deployment cross-origin
-      }
-    },
+    origin: true, // Dynamically reflect request origin for production Vercel & custom domain compatibility
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-razorpay-signature'],
