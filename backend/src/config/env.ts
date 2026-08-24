@@ -23,6 +23,7 @@ const envSchema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
   FROM_EMAIL: z.string().default('noreply@roundiq.com'),
+  ENABLE_SWAGGER: z.string().optional().default('true'),
 });
 
 const _env = envSchema.safeParse(process.env);
