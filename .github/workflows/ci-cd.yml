@@ -1,0 +1,49 @@
+name: RoundIQ CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  audit-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Backend - Install Dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: Backend - Prisma Validate
+        run: |
+          cd backend
+          npx prisma validate
+
+      - name: Backend - TypeScript Check
+        run: |
+          cd backend
+          npx tsc --noEmit
+
+      - name: Frontend - Install Dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Frontend - TypeScript Check
+        run: |
+          cd frontend
+          npx tsc --noEmit
+
+      - name: Build Docker Images (Verification)
+        run: |
+          docker compose build
