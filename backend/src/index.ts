@@ -2,11 +2,13 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import swaggerUi from 'swagger-ui-express';
 import { env } from './config/env';
 import { errorHandler } from './middleware/error-handler';
 import { sendSuccess } from './utils/api-response';
 import { securityHeaders } from './middleware/security';
 import { swaggerSpec } from './config/swagger';
+import { swaggerAuthMiddleware } from './middleware/swagger-auth';
 import { prisma } from './utils/prisma';
 import { logger } from './config/logger';
 
@@ -46,11 +48,11 @@ import businessReportsRoutes from './modules/saas/business-reports.routes';
 const app = express();
 
 // Security middleware & CORS configuration
-app.use(helmet());
+app.use(helmet({ contentSecurityPolicy: false })); // Allow Swagger UI inline scripts
 app.use(securityHeaders);
 app.use(
   cors({
-    origin: true, // Dynamically reflect request origin for production Vercel & custom domain compatibility
+    origin: true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-razorpay-signature'],
@@ -100,11 +102,18 @@ app.get('/health/readiness', async (_req, res) => {
   }
 });
 
-// OpenAPI / Swagger Specs JSON
-app.get('/api-docs.json', (_req, res) => {
+// Swagger Documentation & OpenAPI JSON Specs
+app.get('/docs.json', swaggerAuthMiddleware, (_req, res) => {
   res.setHeader('Content-Type', 'application/json');
   return res.send(swaggerSpec);
 });
+
+app.get('/api-docs.json', swaggerAuthMiddleware, (_req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  return res.send(swaggerSpec);
+});
+
+app.use('/docs', swaggerAuthMiddleware, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // API v1 Routes
 app.use('/api/v1/auth', authRoutes);
@@ -150,6 +159,7 @@ let server: any;
 if (process.env.NODE_ENV !== 'test') {
   server = app.listen(PORT, '0.0.0.0', () => {
     logger.info(`🚀 RoundIQ Backend running on port ${PORT} [${env.NODE_ENV}]`);
+    logger.info(`📚 Swagger UI Documentation mounted at http://localhost:${PORT}/docs`);
   });
 }
 
