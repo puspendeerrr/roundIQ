@@ -63,7 +63,11 @@ export default function AdminDashboardPage() {
                 </Button>
               </Link>
               <Link href="/admin/users">
-                <Button size="sm" variant="outline" className="bg-white/10 text-white hover:bg-white/20 border-white/20">
+                <Button
+                  size="sm"
+                  className="bg-zinc-800 text-white hover:bg-zinc-700 border border-zinc-700 font-bold shadow-sm"
+                  leftIcon={<Users className="h-4 w-4 text-orange-400" />}
+                >
                   Manage Users
                 </Button>
               </Link>

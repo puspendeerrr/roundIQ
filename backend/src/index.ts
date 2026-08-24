@@ -7,6 +7,9 @@ import { errorHandler } from './middleware/error-handler';
 import { sendSuccess } from './utils/api-response';
 import { securityHeaders } from './middleware/security';
 import { swaggerSpec } from './config/swagger';
+import { prisma } from './utils/prisma';
+import { logger } from './config/logger';
+
 import authRoutes from './modules/auth/auth.routes';
 import studentRoutes from './modules/students/students.routes';
 import interviewerRoutes from './modules/interviewers/interviewers.routes';
@@ -47,7 +50,14 @@ app.use(helmet());
 app.use(securityHeaders);
 app.use(
   cors({
-    origin: env.FRONTEND_URL,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. mobile apps, curl, postman) or matching FRONTEND_URL
+      if (!origin || origin === env.FRONTEND_URL || env.NODE_ENV === 'development') {
+        callback(null, true);
+      } else {
+        callback(null, true); // Permissive for production deployment cross-origin
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-razorpay-signature'],
@@ -57,7 +67,7 @@ app.use(
 // Global Rate Limiting
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 150,
+  max: 300,
   message: {
     success: false,
     error: {
@@ -72,17 +82,29 @@ app.use(globalLimiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Health Probes
+// Health & DevOps Probes
 app.get('/health', (_req, res) => {
   return sendSuccess(res, { status: 'healthy', timestamp: new Date().toISOString() }, 'RoundIQ API is operational');
 });
 
 app.get('/health/liveness', (_req, res) => {
-  return res.status(200).json({ status: 'UP', service: 'RoundIQ API Engine' });
+  return res.status(200).json({ status: 'UP', service: 'RoundIQ Render API Engine' });
 });
 
-app.get('/health/readiness', (_req, res) => {
-  return res.status(200).json({ status: 'READY', database: 'PostgreSQL 16 Connected', cache: 'Redis Cache Ready' });
+app.get('/health/readiness', async (_req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    return res.status(200).json({
+      status: 'READY',
+      database: 'Neon PostgreSQL Connected',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    return res.status(503).json({
+      status: 'NOT_READY',
+      error: 'Database connection check failed',
+    });
+  }
 });
 
 // OpenAPI / Swagger Specs JSON
@@ -128,12 +150,41 @@ app.use('/api/v1/reports', businessReportsRoutes);
 // Global Error Handler
 app.use(errorHandler);
 
-const PORT = env.PORT || 5000;
+const PORT = Number(process.env.PORT) || Number(env.PORT) || 5000;
+
+let server: any;
 
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => {
-    console.log(`🚀 RoundIQ Backend running on http://localhost:${PORT} [${env.NODE_ENV}]`);
+  server = app.listen(PORT, '0.0.0.0', () => {
+    logger.info(`🚀 RoundIQ Backend running on port ${PORT} [${env.NODE_ENV}]`);
   });
 }
+
+// Graceful Shutdown & Unhandled Exception Handlers
+const shutdownGracefully = async (signal: string) => {
+  logger.info(`Received ${signal}. Shutting down HTTP server gracefully...`);
+  if (server) {
+    server.close(async () => {
+      logger.info('HTTP server closed. Disconnecting database client...');
+      await prisma.$disconnect();
+      logger.info('Database client disconnected. Exiting process.');
+      process.exit(0);
+    });
+  } else {
+    await prisma.$disconnect();
+    process.exit(0);
+  }
+};
+
+process.on('SIGTERM', () => shutdownGracefully('SIGTERM'));
+process.on('SIGINT', () => shutdownGracefully('SIGINT'));
+
+process.on('unhandledRejection', (reason) => {
+  logger.error('Unhandled Promise Rejection:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  logger.error('Uncaught Exception:', err);
+});
 
 export default app;

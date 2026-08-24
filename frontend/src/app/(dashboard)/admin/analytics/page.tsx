@@ -6,7 +6,7 @@ import { Navbar } from '../../../../components/layout/Navbar';
 import { Footer } from '../../../../components/layout/Footer';
 import { Card } from '../../../../components/ui/Card';
 import { Button } from '../../../../components/ui/Button';
-import { apiClient } from '../../../../lib/api-client';
+import { apiClient, getApiBaseUrl } from '../../../../lib/api-client';
 import {
   TrendingUp,
   Download,
@@ -19,11 +19,11 @@ import {
 
 export default function AdminAnalyticsPage() {
   const handleExportBookings = () => {
-    window.open(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1'}/admin/export/bookings`, '_blank');
+    window.open(`${getApiBaseUrl()}/admin/export/bookings`, '_blank');
   };
 
   const handleExportRevenue = () => {
-    window.open(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1'}/admin/export/revenue`, '_blank');
+    window.open(`${getApiBaseUrl()}/admin/export/revenue`, '_blank');
   };
 
   return (

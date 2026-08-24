@@ -7,7 +7,7 @@ import { Footer } from '../../../components/layout/Footer';
 import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
 import { useAuth } from '../../../context/AuthContext';
-import { apiClient } from '../../../lib/api-client';
+import { apiClient, getApiBaseUrl } from '../../../lib/api-client';
 import {
   ShieldCheck,
   Download,
@@ -40,7 +40,7 @@ export default function AccountSettingsPage() {
   }, []);
 
   const handleExportData = () => {
-    window.open(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1'}/account/export-data`, '_blank');
+    window.open(`${getApiBaseUrl()}/account/export-data`, '_blank');
   };
 
   const handleDeleteAccount = async () => {

@@ -1,0 +1,16 @@
+{
+  "name": "RoundIQ Technical Interview Marketplace",
+  "short_name": "RoundIQ",
+  "description": "Human Technical Mock Interview & Hiring Ecosystem",
+  "start_url": "https://roundiq.algorithyum.in",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#C2410C",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}
