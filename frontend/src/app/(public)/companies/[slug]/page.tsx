@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useEffect, useState, use } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { Navbar } from '../../../../components/layout/Navbar';
 import { Footer } from '../../../../components/layout/Footer';
 import { Card } from '../../../../components/ui/Card';
@@ -19,12 +20,9 @@ import {
   Users,
 } from 'lucide-react';
 
-export default function PublicCompanyProfilePage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
-  const { slug } = use(params);
+export default function PublicCompanyProfilePage() {
+  const params = useParams();
+  const slug = (params?.slug as string) || '';
   const [company, setCompany] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 

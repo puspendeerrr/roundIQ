@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useEffect, useState, use } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { Navbar } from '../../../../components/layout/Navbar';
 import { Footer } from '../../../../components/layout/Footer';
 import { Card } from '../../../../components/ui/Card';
@@ -28,12 +28,9 @@ import {
   AlertCircle,
 } from 'lucide-react';
 
-export default function PublicInterviewerProfilePage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = use(params);
+export default function PublicInterviewerProfilePage() {
+  const params = useParams();
+  const id = (params?.id as string) || '';
   const router = useRouter();
   const { user } = useAuth();
 

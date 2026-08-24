@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useEffect, useState, use } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { Navbar } from '../../../../../components/layout/Navbar';
 import { Footer } from '../../../../../components/layout/Footer';
 import { Card } from '../../../../../components/ui/Card';
@@ -18,12 +19,9 @@ import {
   Clock,
 } from 'lucide-react';
 
-export default function InterviewerSessionPage({
-  params,
-}: {
-  params: Promise<{ bookingId: string }>;
-}) {
-  const { bookingId } = use(params);
+export default function InterviewerSessionPage() {
+  const params = useParams();
+  const bookingId = (params?.bookingId as string) || '';
   const [booking, setBooking] = useState<Booking | null>(null);
   const [meeting, setMeeting] = useState<any>(null);
   const [notes, setNotes] = useState('');
